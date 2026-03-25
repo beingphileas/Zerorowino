@@ -1,0 +1,108 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Drink": {
+      "title": "Drink",
+      "description": "A wine or spirit entry",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Owner ID" },
+        "category": { "type": "string", "enum": ["Wine", "Beer", "Gin", "Whiskey", "Cognac", "Rum"] },
+        "brand": { "type": "string" },
+        "name": { "type": "string" },
+        "region": { "type": "string" },
+        "country": { "type": "string" },
+        "year": { "type": "number" },
+        "qualityScore": { "type": "number" },
+        "personalRating": { "type": "number" },
+        "entryMethod": { "type": "string", "enum": ["scan", "manual", "url"] },
+        "subTab": { "type": "string", "enum": ["Cellar", "Research"] },
+        "tasteNotes": { "type": "string" },
+        "primaryAromas": { "type": "array", "items": { "type": "string" } },
+        "radarData": { "type": "array" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "category", "brand", "name"]
+    },
+    "Merchant": {
+      "title": "Merchant",
+      "description": "A merchant or store",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "websiteUrl": { "type": "string" },
+        "location": { "type": "string" },
+        "drinkCount": { "type": "number" }
+      },
+      "required": ["uid", "name"]
+    },
+    "AITask": {
+      "title": "AI Task",
+      "description": "A background AI operation",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "type": { "type": "string", "enum": ["image_analysis", "menu_analysis", "portfolio_search", "product_search"] },
+        "status": { "type": "string", "enum": ["pending", "processing", "completed", "failed"] },
+        "progress": { "type": "number" },
+        "label": { "type": "string" },
+        "payload": { "type": "object" },
+        "resultCount": { "type": "number" },
+        "error": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "type", "status", "createdAt"]
+    },
+    "DrinkList": {
+      "title": "Drink List",
+      "description": "A scanned list of drinks",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "source": { "type": "string" },
+        "dateScanned": { "type": "string" },
+        "itemCount": { "type": "number" },
+        "status": { "type": "string" },
+        "items": { "type": "array" }
+      },
+      "required": ["uid", "name", "items"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/drinks/{drinkId}": {
+      "schema": "Drink",
+      "description": "Wine and spirit entries"
+    },
+    "/merchants/{merchantId}": {
+      "schema": "Merchant",
+      "description": "Merchants and stores"
+    },
+    "/tasks/{taskId}": {
+      "schema": "AITask",
+      "description": "Background AI tasks"
+    },
+    "/drink_lists/{listId}": {
+      "schema": "DrinkList",
+      "description": "Scanned drink lists"
+    }
+  }
+}

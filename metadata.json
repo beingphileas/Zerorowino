@@ -1,0 +1,7 @@
+{
+  "name": "From Zero to Wino",
+  "description": "Educational AI platform for beverage expertise, transforming beginners into experts with BramBrass Beverage Intelligence.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
