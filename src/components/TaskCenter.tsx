@@ -6,6 +6,8 @@ import { collection, query, where, onSnapshot, orderBy, deleteDoc, doc, updateDo
 import { AITask } from '../types';
 import { cn } from '../lib/utils';
 
+import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
+
 const TaskCenter: React.FC = () => {
   const [tasks, setTasks] = useState<AITask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,8 @@ const TaskCenter: React.FC = () => {
       })) as AITask[];
       setTasks(taskList);
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'tasks');
     });
 
     return () => unsubscribe();

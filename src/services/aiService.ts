@@ -162,6 +162,10 @@ export async function analyzeDrinkImage(base64Image: string): Promise<ExtractedD
 }
 
 export async function analyzeDrinkList(base64Images: string[]): Promise<ExtractedDrinkData[]> {
+  if (!base64Images || !Array.isArray(base64Images) || base64Images.length === 0) {
+    console.warn("analyzeDrinkList called with empty or invalid images array");
+    return [];
+  }
   return withRetry(async () => {
     try {
       const parts = base64Images.map(img => ({
@@ -207,6 +211,10 @@ export async function analyzeDrinkList(base64Images: string[]): Promise<Extracte
 }
 
 export async function analyzeDrinkListUrl(url: string): Promise<ExtractedDrinkData[]> {
+  if (!url) {
+    console.warn("analyzeDrinkListUrl called with empty URL");
+    return [];
+  }
   return withRetry(async () => {
     try {
       const response = await ai.models.generateContent({

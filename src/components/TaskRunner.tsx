@@ -2,7 +2,15 @@ import React, { useEffect, useRef } from 'react';
 import { db, auth } from '../firebase';
 import { collection, query, where, onSnapshot, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { AITask, Drink } from '../types';
-import { analyzeDrinkImage, discoverProducerByProduct, discoverProductsByProducer, analyzeDrinkList } from '../services/aiService';
+import { 
+  analyzeDrinkImage, 
+  discoverProducerByProduct, 
+  discoverProductsByProducer, 
+  analyzeDrinkList,
+  analyzeDrinkListUrl,
+  discoverLinks,
+  analyzeMultipleUrls
+} from '../services/aiService';
 import { getCountryFlag } from '../lib/utils';
 
 // Helper to generate radar data
@@ -46,6 +54,8 @@ const generateFoodPairings = (profile: string, category: string = 'Wine') => {
   return { classic: ['Kaasplankje', 'Charcuterie'], modern: ['Fusion Tapas', 'Gevulde Portobello'], budget: ['Stokbrood met Dips', 'Hartige Taart'], matchIcon: 'Cheese' as const };
 };
 
+import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
+
 const TaskRunner: React.FC = () => {
   const processingTasks = useRef<Set<string>>(new Set());
 
@@ -80,6 +90,8 @@ const TaskRunner: React.FC = () => {
           processingTasks.current.delete(task.id);
         }
       });
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'tasks');
     });
 
     return () => unsubscribe();
@@ -223,11 +235,33 @@ const TaskRunner: React.FC = () => {
       }
 
       case 'menu_analysis': {
-        const { images, sourceName } = (task as any).payload;
+        const { images, url, sourceName, isDeepScan } = (task as any).payload;
         await updateDoc(taskRef, { progress: 20, updatedAt: new Date().toISOString() });
         
-        const results = await analyzeDrinkList(images);
+        let results: any[] = [];
         
+        if (images && Array.isArray(images) && images.length > 0) {
+          results = await analyzeDrinkList(images);
+        } else if (url) {
+          if (isDeepScan) {
+            // Stage 1: Discover links
+            await updateDoc(taskRef, { progress: 30, updatedAt: new Date().toISOString() });
+            const links = await discoverLinks(url);
+            
+            // Stage 2: Analyze multiple URLs
+            await updateDoc(taskRef, { progress: 50, updatedAt: new Date().toISOString() });
+            results = await analyzeMultipleUrls(links.slice(0, 5)); // Limit to first 5 links for performance
+          } else {
+            results = await analyzeDrinkListUrl(url);
+          }
+        } else {
+          throw new Error("Geen afbeeldingen of URL opgegeven voor analyse.");
+        }
+        
+        if (!results || !Array.isArray(results)) {
+          results = [];
+        }
+
         // Save to drink_lists collection
         const newList = {
           uid: auth.currentUser!.uid,

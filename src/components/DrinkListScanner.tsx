@@ -25,6 +25,8 @@ import WineDetailView from './WineDetailView';
 import BeerDetailView from './BeerDetailView';
 import SpiritDetailView from './SpiritDetailView';
 
+import { handleFirestoreError, OperationType } from '../lib/firebaseUtils';
+
 export default function DrinkListScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanUrl, setScanUrl] = useState('');
@@ -54,6 +56,8 @@ export default function DrinkListScanner() {
       // Sort in memory to avoid index requirement
       setLists(listData.sort((a, b) => b.dateScanned.localeCompare(a.dateScanned)));
       setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'drink_lists');
     });
 
     return () => unsubscribe();

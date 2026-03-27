@@ -125,6 +125,7 @@ export default function WineModule({ subTab, setSubTab, drinks, setDrinks, force
   const [sortBy, setSortBy] = useState<'score' | 'name' | 'year'>('score');
   const [filterProfile, setFilterProfile] = useState<string | null>(null);
   const [filterYear, setFilterYear] = useState<number | null>(null);
+  const [filterGrape, setFilterGrape] = useState<string | null>(null);
   const [discoveryQuery, setDiscoveryQuery] = useState('');
   const [discoverySearchType, setDiscoverySearchType] = useState<'product' | 'producer'>('producer');
 
@@ -166,6 +167,13 @@ export default function WineModule({ subTab, setSubTab, drinks, setDrinks, force
     return Array.from(new Set(allYears)).sort((a, b) => b - a);
   }, [drinks]);
 
+  const grapes = useMemo(() => {
+    const allGrapes = drinks
+      .filter(d => d.category === 'Wine' && (d as WineAnalysis).grapes)
+      .flatMap(d => (d as WineAnalysis).grapes as string[]);
+    return Array.from(new Set(allGrapes)).sort();
+  }, [drinks]);
+
   const filteredDrinks = useMemo(() => {
     let result = drinks.filter(d => 
       d.category === 'Wine' && 
@@ -183,13 +191,17 @@ export default function WineModule({ subTab, setSubTab, drinks, setDrinks, force
       result = result.filter(d => d.year === filterYear);
     }
 
+    if (filterGrape) {
+      result = result.filter(d => d.grapes?.includes(filterGrape));
+    }
+
     return result.sort((a, b) => {
       if (sortBy === 'score') return (b.qualityScore || 0) - (a.qualityScore || 0);
       if (sortBy === 'name') return a.brand.localeCompare(b.brand);
       if (sortBy === 'year') return (b.year || 0) - (a.year || 0);
       return 0;
     });
-  }, [drinks, subTab, searchQuery, sortBy, filterProfile]);
+  }, [drinks, subTab, searchQuery, sortBy, filterProfile, filterYear, filterGrape]);
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,6 +321,22 @@ export default function WineModule({ subTab, setSubTab, drinks, setDrinks, force
               <option value="year">Jaargang</option>
             </select>
           </div>
+
+          {grapes.length > 0 && (
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+              <Wine size={14} className="text-zinc-500" />
+              <select 
+                value={filterGrape || ''} 
+                onChange={(e) => setFilterGrape(e.target.value || null)}
+                className="bg-transparent text-xs text-zinc-300 focus:outline-none cursor-pointer max-w-[120px]"
+              >
+                <option value="">Alle Druiven</option>
+                {grapes.map(grape => (
+                  <option key={grape} value={grape}>{grape}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <button 
             onClick={() => setShowForm(true)}

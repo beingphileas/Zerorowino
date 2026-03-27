@@ -62,6 +62,10 @@ const SUB_TABS = [
   { id: 'Tasks' as SubTab, label: 'Projecten', icon: RefreshCw },
 ];
 
+import { handleFirestoreError, OperationType } from './lib/firebaseUtils';
+
+import { getDocFromServer } from 'firebase/firestore';
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,6 +73,19 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<Category>('Wine');
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('Cellar');
   const [drinks, setDrinks] = useState<Drink[]>([]);
+
+  useEffect(() => {
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if(error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration. ");
+        }
+      }
+    }
+    testConnection();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -91,7 +108,7 @@ export default function App() {
           const drinksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Drink[];
           setDrinks(drinksData);
         }, (error) => {
-          console.error("Firestore Error (Drinks):", error);
+          handleFirestoreError(error, OperationType.GET, 'drinks');
         });
 
         return () => unsubDrinks();
